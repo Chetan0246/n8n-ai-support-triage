@@ -1,0 +1,5 @@
+[
+  {"ticket_id":"T-1001","email":"priya@example.com","subject":"Where is my order??","message":"Order #4821 was supposed to arrive Friday. It is Monday. Second time this has happened. Fix it or refund me."},
+  {"ticket_id":"T-1002","email":"sam@example.com","subject":"Shipping to Canada","message":"Hi! Do you ship the lavender body lotion to Toronto, and roughly how long does it take?"},
+  {"ticket_id":"T-1003","email":"promo@cheap-seo.biz","subject":"Rank #1 on Google in 7 days","message":"We guarantee first page rankings for your store. Reply now for 90% off."}
+]

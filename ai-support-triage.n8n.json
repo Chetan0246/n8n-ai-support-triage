@@ -1,0 +1,196 @@
+{
+  "name": "AI Support Ticket Triage (Shopify)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "support-triage",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "15498260-fb5a-4b73-94ce-eaad5826b0a4",
+      "name": "Support ticket in",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        300
+      ],
+      "webhookId": "28eeab4d-e3eb-410e-9365-0c21c4d01db6"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://integrate.api.nvidia.com/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: 'nvidia/nemotron-3.5-lightning-30b-a3b', temperature: 0.2, max_tokens: 2000, messages: [ { role: 'system', content: \"You are the support-triage agent for a Shopify store. Read the customer message and reply with ONLY a JSON object, no prose, with these keys:\\ncategory: one of order_status, refund_return, product_question, complaint, spam, other\\npriority: low, medium or high\\nsentiment: positive, neutral or negative\\norder_id: the order number as a string, or null\\nsummary: one sentence for the support team\\nneeds_human: true if a refund, angry customer, legal threat or anything you are unsure about\\ndraft_reply: a short, polite reply to the customer that promises nothing you cannot verify\" }, { role: 'user', content: 'Subject: ' + ($json.body.subject || '') + '\\nFrom: ' + ($json.body.email || '') + '\\n\\n' + ($json.body.message || '') } ] }) }}",
+        "options": {
+          "timeout": 90000
+        }
+      },
+      "id": "66442052-3074-4d78-8097-04fd70039beb",
+      "name": "Classify with LLM",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        240,
+        300
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "jsCode": "// Turn the model's text into clean, validated fields.\nconst ticket = $('Support ticket in').first().json.body || {};\nconst raw = $input.first().json.choices?.[0]?.message?.content || '';\n\nlet ai;\ntry {\n  const cleaned = raw.replace(/```json|```/g, '').trim();\n  ai = JSON.parse(cleaned.slice(cleaned.indexOf('{'), cleaned.lastIndexOf('}') + 1));\n} catch (e) {\n  // Never trust a broken answer: send it to a person instead.\n  ai = { category: 'other', priority: 'high', sentiment: 'unknown', order_id: null,\n         summary: 'Model returned invalid JSON, routed to a human.', draft_reply: '', needs_human: true };\n}\n\nconst allowed = ['order_status', 'refund_return', 'product_question', 'complaint', 'spam', 'other'];\nif (!allowed.includes(ai.category)) ai.category = 'other';\nif (!['low', 'medium', 'high'].includes(ai.priority)) ai.priority = 'medium';\n\n// Business rule on top of the model: money and anger always go to a human.\nai.needs_human = Boolean(ai.needs_human) || ['refund_return', 'complaint'].includes(ai.category) || ai.priority === 'high';\n\nreturn [{ json: {\n  ticket_id: ticket.ticket_id || `T-${Date.now()}`,\n  customer_email: ticket.email || null,\n  subject: ticket.subject || '',\n  ...ai,\n  processed_at: new Date().toISOString(),\n} }];"
+      },
+      "id": "b59d80e0-a363-42c7-9c0d-4370c6c7f101",
+      "name": "Parse and validate",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "c25e0c1c-13de-4fcb-9acc-a78c3352e6d0",
+              "leftValue": "={{ $json.needs_human }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "0dfef289-a669-42b9-b5cc-8a912495e11c",
+      "name": "Needs a human?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        720,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://hooks.slack.com/services/REPLACE/WITH/YOURS",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ text: ':rotating_light: *' + $json.priority.toUpperCase() + '* ' + $json.category + ' from ' + $json.customer_email + (($json.order_id) ? ' (order #' + $json.order_id + ')' : '') + '\\n' + $json.summary + '\\n*Suggested reply:* ' + $json.draft_reply }) }}",
+        "options": {}
+      },
+      "id": "26906483-ee16-4fcb-a3b4-0a297df13992",
+      "name": "Alert team on Slack",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        960,
+        180
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($('Parse and validate').first().json) }}",
+        "options": {}
+      },
+      "id": "4c8b5715-b3a7-42d9-ad30-9e70bca2a654",
+      "name": "Return triage result",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1200,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Support ticket in": {
+      "main": [
+        [
+          {
+            "node": "Classify with LLM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Classify with LLM": {
+      "main": [
+        [
+          {
+            "node": "Parse and validate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse and validate": {
+      "main": [
+        [
+          {
+            "node": "Needs a human?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Needs a human?": {
+      "main": [
+        [
+          {
+            "node": "Alert team on Slack",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return triage result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Alert team on Slack": {
+      "main": [
+        [
+          {
+            "node": "Return triage result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}
