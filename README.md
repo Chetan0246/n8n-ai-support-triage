@@ -32,13 +32,34 @@ curl -X POST http://localhost:5678/webhook-test/support-triage \
 Real result from the model for that ticket:
 
 ```json
-{"category":"complaint","priority":"high","sentiment":"negative","order_id":"4821",
- "summary":"Customer reports order #4821 delayed past promised delivery date (Friday), second occurrence, demands resolution or refund.",
- "needs_human":true,
- "draft_reply":"Hi Priya, I'm sorry your order #4821 hasn't arrived as expected. I'm investigating the delay and will contact you soon with an update."}
+{
+  "ticket_id": "T-1001",
+  "customer_email": "priya@example.com",
+  "subject": "Where is my order??",
+  "category": "complaint",
+  "priority": "high",
+  "sentiment": "negative",
+  "order_id": "4821",
+  "summary": "Customer reports order #4821 delayed from Friday arrival to Monday, notes this is the second occurrence, and demands resolution or refund.",
+  "needs_human": true,
+  "draft_reply": "Hi Priya, I'm sorry your order #4821 hasn't arrived as expected. I'm investigating the delay and will get back to you soon. Thank you for your patience.",
+  "processed_at": "2026-11-03T10:24:30.700Z"
+}
 ```
 
-Or run all three sample tickets (an angry delay, a shipping question, spam): `./scripts/send-samples.sh` (needs jq; click "Test workflow" before each run, or activate the workflow and pass `http://localhost:5678/webhook/support-triage`).
+Or run all three sample tickets (an angry delay, a shipping question, spam): 
+```bash
+./scripts/send-samples.sh http://localhost:5678/webhook/support-triage
+```
+The full triage results for all three sample tickets are saved in [`samples/results.json`](samples/results.json).
+
+### Sample Triage Results Summary
+
+| Ticket ID | Subject | Category | Priority | Needs Human | Extracted Order ID |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **T-1001** | *Where is my order??* | `complaint` | `high` | `true` | `4821` |
+| **T-1002** | *Shipping to Canada* | `product_question` | `low` | `false` | `null` |
+| **T-1003** | *Rank #1 on Google in 7 days* | `spam` | `low` | `false` | `null` |
 
 ## Design choices to talk about in an interview
 
@@ -58,6 +79,7 @@ Or run all three sample tickets (an angry delay, a shipping question, spam): `./
 
 - `ai-support-triage.n8n.json`: the workflow to import
 - `samples/tickets.json`: three test tickets
+- `samples/results.json`: verified triage outputs from all three test tickets
 - `scripts/send-samples.sh`: posts the samples to the webhook
 - `scripts/parse-node.js`: the Code node's parsing logic on its own
 - `scripts/build.py`: regenerates the workflow JSON

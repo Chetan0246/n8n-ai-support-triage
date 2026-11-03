@@ -1,0 +1,41 @@
+[
+  {
+    "ticket_id": "T-1001",
+    "customer_email": "priya@example.com",
+    "subject": "Where is my order??",
+    "category": "complaint",
+    "priority": "high",
+    "sentiment": "negative",
+    "order_id": "4821",
+    "summary": "Customer reports order #4821 delayed from Friday arrival to Monday, notes this is the second occurrence, and demands resolution or refund.",
+    "needs_human": true,
+    "draft_reply": "Hi Priya, I'm sorry your order #4821 hasn't arrived as expected. I'm investigating the delay and will get back to you soon. Thank you for your patience.",
+    "processed_at": "2026-11-03T10:24:30.700Z"
+  },
+  {
+    "ticket_id": "T-1002",
+    "customer_email": "sam@example.com",
+    "subject": "Shipping to Canada",
+    "category": "product_question",
+    "priority": "low",
+    "sentiment": "neutral",
+    "order_id": null,
+    "summary": "Customer inquires about shipping lavender body lotion to Toronto and estimated delivery time.",
+    "needs_human": false,
+    "draft_reply": "Yes, we ship to Toronto! Delivery times vary by location, typically 5-7 business days. Please check the checkout for the most accurate estimate. Let me know if you have other questions!",
+    "processed_at": "2026-11-03T10:24:41.771Z"
+  },
+  {
+    "ticket_id": "T-1003",
+    "customer_email": "promo@cheap-seo.biz",
+    "subject": "Rank #1 on Google in 7 days",
+    "category": "spam",
+    "priority": "low",
+    "sentiment": "neutral",
+    "order_id": null,
+    "summary": "Unsolicited SEO spam email promising first-page Google rankings with 90% discount.",
+    "needs_human": false,
+    "draft_reply": "Thank you for your message. We do not guarantee search engine rankings, as results vary based on numerous factors and algorithm updates. Please unsubscribe from future communications.",
+    "processed_at": "2026-11-03T10:24:56.130Z"
+  }
+]

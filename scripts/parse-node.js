@@ -1,11 +1,23 @@
 // Turn the model's text into clean, validated fields.
 const ticket = $('Support ticket in').first().json.body || {};
-const raw = $input.first().json.choices?.[0]?.message?.content || '';
+const msg = $input.first().json.choices?.[0]?.message || {};
+// Reasoning models may leave content empty or wrap thoughts in <think> tags.
+const raw = msg.content || msg.reasoning_content || '';
+
+// Pull out the last complete JSON object, ignoring thinking and code fences.
+function extractJson(text) {
+  const cleaned = text.replace(/<think>[\s\S]*?<\/think>/gi, '').replace(/```json|```/g, '').trim();
+  const end = cleaned.lastIndexOf('}');
+  for (let start = cleaned.lastIndexOf('{', end); start >= 0; start = cleaned.lastIndexOf('{', start - 1)) {
+    try { return JSON.parse(cleaned.slice(start, end + 1)); } catch (e) {}
+  }
+  throw new Error('no JSON object found');
+}
 
 let ai;
 try {
-  const cleaned = raw.replace(/```json|```/g, '').trim();
-  ai = JSON.parse(cleaned.slice(cleaned.indexOf('{'), cleaned.lastIndexOf('}') + 1));
+  ai = extractJson(raw);
+  if (typeof ai.category !== 'string') throw new Error('missing category');
 } catch (e) {
   // Never trust a broken answer: send it to a person instead.
   ai = { category: 'other', priority: 'high', sentiment: 'unknown', order_id: null,
