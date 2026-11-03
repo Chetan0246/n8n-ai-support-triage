@@ -37,13 +37,13 @@ Real result from the model for that ticket:
   "customer_email": "priya@example.com",
   "subject": "Where is my order??",
   "category": "complaint",
-  "priority": "high",
+  "priority": "medium",
   "sentiment": "negative",
   "order_id": "4821",
-  "summary": "Customer reports order #4821 delayed from Friday arrival to Monday, notes this is the second occurrence, and demands resolution or refund.",
+  "summary": "Customer reports order #4821 delayed past estimated delivery date and expresses frustration over recurring issue.",
   "needs_human": true,
-  "draft_reply": "Hi Priya, I'm sorry your order #4821 hasn't arrived as expected. I'm investigating the delay and will get back to you soon. Thank you for your patience.",
-  "processed_at": "2026-11-03T10:24:30.700Z"
+  "draft_reply": "We're looking into order #4821 and will confirm the delivery status shortly. Please let us know if you'd like assistance with a refund or return.",
+  "processed_at": "2026-11-03T10:33:14.149Z"
 }
 ```
 
@@ -57,7 +57,7 @@ The full triage results for all three sample tickets are saved in [`samples/resu
 
 | Ticket ID | Subject | Category | Priority | Needs Human | Extracted Order ID |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **T-1001** | *Where is my order??* | `complaint` | `high` | `true` | `4821` |
+| **T-1001** | *Where is my order??* | `complaint` | `medium` | `true` | `4821` |
 | **T-1002** | *Shipping to Canada* | `product_question` | `low` | `false` | `null` |
 | **T-1003** | *Rank #1 on Google in 7 days* | `spam` | `low` | `false` | `null` |
 

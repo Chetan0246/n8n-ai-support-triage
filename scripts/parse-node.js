@@ -28,6 +28,9 @@ const allowed = ['order_status', 'refund_return', 'product_question', 'complaint
 if (!allowed.includes(ai.category)) ai.category = 'other';
 if (!['low', 'medium', 'high'].includes(ai.priority)) ai.priority = 'medium';
 
+// Spam never gets a reply.
+if (ai.category === 'spam') ai.draft_reply = '';
+
 // Business rule on top of the model: money and anger always go to a human.
 ai.needs_human = Boolean(ai.needs_human) || ['refund_return', 'complaint'].includes(ai.category) || ai.priority === 'high';
 
